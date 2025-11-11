@@ -159,6 +159,20 @@ const RouteTest = () => {
 
             console.log(userPoint)
 
+            console.log('test')
+
+            console.log(e)
+
+            const heading = e.target._heading ? e.target._heading : 0
+
+            mapRef.current.easeTo({
+                center: [e.coords.longitude, e.coords.latitude],
+                zoom: 18,
+                pitch: 60,
+                bearing: heading,
+                duration: 1500
+            });
+
             if (routeGeoJSONRef.current) {
                 const distance = turf.pointToLineDistance(
                     userPoint,
