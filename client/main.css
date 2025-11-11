@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-family: sans-serif;
+}
+
+a {
+  color:dodgerblue;
+}
+
+.middle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.mapbox-directions-instructions {
+  display: none;
+}
