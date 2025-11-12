@@ -9,7 +9,6 @@ export const App = () => {
                 <Route path="" Component={RouteTest}/>
             </Routes>
         </Router>
-
     );
 }
 

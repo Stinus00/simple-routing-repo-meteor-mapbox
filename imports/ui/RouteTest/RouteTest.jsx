@@ -99,8 +99,10 @@ const RouteTest = () => {
             console.log("✅ Map loaded.");
             setMapLoaded(true);
 
-            directions.setOrigin([5.70400,51.25744]);
-            directions.setDestination([5.70846,51.25151]);
+            // Default Origin en Destination in Weert
+            // Staat voor nu uit
+            // directions.setOrigin([5.70400,51.25744]);
+            // directions.setDestination([5.70846,51.25151]);
 
             geoLocation.trigger();
 
@@ -109,6 +111,7 @@ const RouteTest = () => {
                 (layer) => layer.type === 'symbol' && layer.layout['text-field']
             ).id;
 
+            // Voeg 3d gebouwen toe
             mapRef.current.addLayer(
                 {
                     id: 'add-3d-buildings',
@@ -156,12 +159,6 @@ const RouteTest = () => {
 
         geoLocation.on("geolocate", (e) => {
             const userPoint = turf.point([e.coords.longitude, e.coords.latitude]);
-
-            console.log(userPoint)
-
-            console.log('test')
-
-            console.log(e)
 
             const heading = e.target._heading ? e.target._heading : 0
 
