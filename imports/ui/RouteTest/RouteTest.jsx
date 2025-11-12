@@ -25,47 +25,12 @@ const RouteTest = () => {
 
     const userId = Meteor.userId();
 
-    function checkForProceed() {
-        if (!mapContainerRef.current) {
-            console.error("❌ mapContainerRef is null");
-            return false;
-        }
-
-        if(mapRef.current) {
-            console.error("❌ Map already initialized.");
-            return false;
-        }
-
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        if (!gl) {
-            console.warn("❌ WebGL is NOT supported in this WebView!");
-            return false
-        }
-        else
-        {
-            console.log("✅ WebGL is supported");
-        }
-        return true
-    }
-    function initializeMap() {
-        console.log("✅ Initializing map...");
-
-        mapRef.current = new mapboxgl.Map({
-            container: mapContainerRef.current,
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [5.706, 51.251],
-            zoom: 16,
-            pitchWithRotate: true,
-            pitch: 45,
-        });
-
-        console.log("⚠️ Current Mapref:", mapRef.current);
-
+    function addNavControl() {
         mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
         console.log("NavControl Added");
-
+    }
+    function addGeolocateControl() {
         const geoLocation = new mapboxgl.GeolocateControl({
             positionOptions: {
                 enableHighAccuracy: true,
@@ -80,6 +45,9 @@ const RouteTest = () => {
 
         console.log("GeolocateControl Added");
 
+        return geoLocation
+    }
+    function addDirectionsControl() {
         const directions = new MapboxDirections({
             accessToken: mapboxgl.accessToken,
             unit: "metric",
@@ -91,10 +59,13 @@ const RouteTest = () => {
             directions,
             'top-left'
         );
-        directionsRef.current = directions;
 
         console.log("Added Route Control")
 
+        return directions
+    }
+
+    function onLoad(directions, geoLocation) {
         mapRef.current.on('load', () => {
             console.log("✅ Map loaded.");
             setMapLoaded(true);
@@ -146,6 +117,8 @@ const RouteTest = () => {
                 labelLayerId
             );
         });
+    }
+    function onRouteCreation(directions) {
         directions.on("route", (e) => {
             console.log("New route:", e.route[0]);
             console.log("All Routes:", e.route);
@@ -156,10 +129,11 @@ const RouteTest = () => {
             routeGeoJSONRef.current = line;
             console.log("Route loaded:", line);
         });
-
+    }
+    function onGeoLocate(geoLocation) {
         geoLocation.on("geolocate", (e) => {
-            const userPoint = turf.point([e.coords.longitude, e.coords.latitude]);
 
+            // Ga naar user toe met pitch
             const heading = e.target._heading ? e.target._heading : 0
 
             mapRef.current.easeTo({
@@ -170,14 +144,15 @@ const RouteTest = () => {
                 duration: 1500
             });
 
+            const userPoint = turf.point([e.coords.longitude, e.coords.latitude]);
+
             if (routeGeoJSONRef.current) {
+                // Krijg meters van pad af
                 const distance = turf.pointToLineDistance(
                     userPoint,
                     routeGeoJSONRef.current,
                     { units: "meters" }
                 );
-
-                console.log(distance)
 
                 if (distance > 30) {
                     // Zet een nieuwe waypoint neer als mensen van het pad af zijn
@@ -186,6 +161,54 @@ const RouteTest = () => {
                 }
             }
         });
+    }
+
+    function checkForProceed() {
+        if (!mapContainerRef.current) {
+            console.error("❌ mapContainerRef is null");
+            return false;
+        }
+
+        if(mapRef.current) {
+            console.error("❌ Map already initialized.");
+            return false;
+        }
+
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (!gl) {
+            console.warn("❌ WebGL is NOT supported in this WebView!");
+            return false
+        }
+        else
+        {
+            console.log("✅ WebGL is supported");
+        }
+        return true
+    }
+    function initializeMap() {
+        console.log("✅ Initializing map...");
+
+        mapRef.current = new mapboxgl.Map({
+            container: mapContainerRef.current,
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [5.706, 51.251],
+            zoom: 16,
+            pitchWithRotate: true,
+            pitch: 45,
+        });
+
+        console.log("⚠️ Current Mapref:", mapRef.current);
+
+        // Voeg de controls bij de Map toe
+        addNavControl()
+        const geoLocation = addGeolocateControl()
+        const directions = addDirectionsControl()
+
+        // Extra Controls
+        onLoad(directions, geoLocation)
+        onRouteCreation(directions)
+        onGeoLocate(geoLocation)
 
         mapRef.current.on('error', (e) => {
             console.error('Map error:', e.error);
@@ -197,7 +220,6 @@ const RouteTest = () => {
     }
 
     useEffect(() => {
-
         if(!checkForProceed())
             return;
 
